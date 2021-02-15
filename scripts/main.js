@@ -1,154 +1,69 @@
-const imagesArea = document.querySelector('.images');
-const gallery = document.querySelector('.gallery');
-const galleryHeader = document.querySelector('.gallery-header');
-const searchBtn = document.getElementById('search-btn');
-const sliderBtn = document.getElementById('create-slider');
-const sliderContainer = document.getElementById('sliders');
-const search = document.querySelector('#search')
-// selected image 
-let sliders = [];
+const data = () => {
+    fetch('https://randomuser.me/api/') //?results=5000
+        .then(res => res.json())
+        .then(data => {
+            const UserData = data.results[0]
+            console.log(UserData);
+            document.getElementById('image').src = UserData.picture.large
+            document.getElementById('userInfoType').innerText = `Hi, I am`
+            document.getElementById('userInfo').innerText = `${UserData.name.title} ${UserData.name.first} ${UserData.name.last}`
+            displayData(data)
+        })
+        .catch(err => console.log(err))
 
+}
+const icons = () => {
+    const iconList = document.querySelectorAll('i')
 
-// If this key doesn't work
-// Find the name in the url and go to their website
-// to create your own api key
-const KEY = '20266550-98ff8b2c163135febceeddc66&q';
-
-
-const triggerBtnEnter = (input, button) => {
-  // Execute a function when the user releases a key on the keyboard
-  input.addEventListener("keyup", function (event) {
-    // Number 13 is the "Enter" key on the keyboard
-    if (event.keyCode === 13) {
-      // Cancel the default action, if needed
-      event.preventDefault();
-      // Trigger the button element with a click
-      button.click();
+    const icon = {
+        user: iconList[0],
+        email: iconList[1],
+        birthday: iconList[2],
+        address: iconList[3],
+        phone: iconList[4],
+        password: iconList[5]
     }
-  })
-}
-triggerBtnEnter(search, searchBtn)
-
-// show images 
-const showImages = (images) => {
-  imagesArea.style.display = 'block';
-  gallery.innerHTML = '';
-  // show gallery title
-  galleryHeader.style.display = 'flex';
-  images.forEach(image => {
-    let div = document.createElement('div');
-    div.className = 'col-lg-3 col-md-4 col-xs-6 img-item mb-2';
-    div.innerHTML = ` <img class="img-fluid img-thumbnail" onclick=selectItem(event,"${image.webformatURL}") src="${image.webformatURL}" alt="${image.tags}">`;
-    gallery.appendChild(div)
-  })
-  loadingSpinner()
+    return icon
 }
 
-const getImages = (query) => {
-  loadingSpinner()
-  fetch(`https://pixabay.com/api/?key=${KEY}=${query}&image_type=photo&pretty=true`)
-    .then(response => response.json())
-    .then(data => showImages(data.hits))
-    .catch(err => console.log(err))
+const displayData = data => {
+    const userData = data.results[0]
+    const userDetails = document.getElementById('userInfo')
+    const userInfoType = document.getElementById('userInfoType')
+    const user = icons().user
+    const email = icons().email
+    const address = icons().address
+    const phone = icons().phone
+    const birthday = icons().birthday
+    const password = icons().password
+
+    user.addEventListener('mouseover', () => {
+        const name = userData.name
+        userInfoType.innerText = `Hi, I am`
+        userDetails.innerText = `${name.title} ${name.first} ${name.last}`
+    })
+    email.addEventListener('mouseover', () => {
+        userInfoType.innerText = `My email is`
+        userDetails.innerText = userData.email
+
+    })
+    birthday.addEventListener('mouseover', () => {
+        const dob = userData.dob.date
+        userInfoType.innerText = `My birthday is`
+        userDetails.innerText = dob.split('T')[0]
+    })
+    address.addEventListener('mouseover', () => {
+        userInfoType.innerText = `I'm From`
+        userDetails.innerText = `${userData.location.street.name}, ${userData.location.city}, ${userData.location.country} `
+    })
+    phone.addEventListener('mouseover', () => {
+        userInfoType.innerText = `My Cell Phone Number`
+        userDetails.innerText = userData.phone
+    })
+    password.addEventListener('mouseover', () => {
+        userInfoType.innerText = `My Login Details`
+        userDetails.innerHTML = `User Name: ${userData.login.username} <br> Password: ${userData.login.password}`
+    })
+
 }
-
-let slideIndex = 0;
-const selectItem = (event, img) => {
-  let element = event.target;
-  element.classList.add('added');
-
-  let item = sliders.indexOf(img);
-  if (item === -1) {
-    sliders.push(img);
-  } else {
-    element.classList.remove('added');
-    sliders.splice(item, 1)
-  }
-}
-var timer
-const createSlider = () => {
-  // check slider image length
-  if (sliders.length < 2) {
-    alert('Select at least 2 image.')
-    return;
-  }
-  let duration = document.getElementById('duration').value || 1000;
-  if (isNaN(duration) || duration < 1000) {
-    // alert('Duration cannot be negative')
-    duration = 1000
-  }
-
-  // create slider previous next area
-  sliderContainer.innerHTML = '';
-  const prevNext = document.createElement('div');
-  prevNext.className = "prev-next d-flex w-100 justify-content-between align-items-center";
-  prevNext.innerHTML = ` 
-  <span class="prev" onclick="changeItem(-1)"><i class="fas fa-chevron-left"></i></span>
-  <span class="next" onclick="changeItem(1)"><i class="fas fa-chevron-right"></i></span>
-  `;
-
-  sliderContainer.appendChild(prevNext)
-  document.querySelector('.main').style.display = 'block';
-  // hide image aria
-  imagesArea.style.display = 'none';
-
-  sliders.forEach(slide => {
-    let item = document.createElement('div')
-    item.className = "slider-item";
-    item.innerHTML = `<img class="w-100"
-    src="${slide}"
-    alt="">`;
-    sliderContainer.appendChild(item)
-  })
-  changeSlide(0)
-  timer = setInterval(function () {
-    slideIndex++;
-    changeSlide(slideIndex);
-  }, duration);
-}
-
-// change slider index 
-const changeItem = index => {
-  changeSlide(slideIndex += index);
-}
-
-// change slide item
-const changeSlide = (index) => {
-
-  const items = document.querySelectorAll('.slider-item');
-  if (index < 0) {
-    slideIndex = items.length - 1
-    index = slideIndex;
-  };
-
-  if (index >= items.length) {
-    index = 0;
-    slideIndex = 0;
-  }
-
-  items.forEach(item => {
-    item.style.display = "none"
-  })
-
-  items[index].style.display = "block"
-}
-
-searchBtn.addEventListener('click', function () {
-  document.querySelector('.main').style.display = 'none';
-  clearInterval(timer);
-  const search = document.getElementById('search');
-  getImages(search.value)
-  sliders.length = 0;
-})
-
-sliderBtn.addEventListener('click', function () {
-  createSlider()
-})
-
-triggerBtnEnter(document.getElementById('duration'), sliderBtn)
-
-const loadingSpinner = () => {
-  document.getElementById('loading-spinner').classList.toggle('d-none')
-  gallery.classList.toggle('d-none')
-  document.querySelector('.images').classList.toggle('d-none')
-}
+data();
